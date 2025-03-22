@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>元素ゲームのチートシート</title>
+</head><body>
+<h1>元素ゲームのチートシート</h1>
+
+<div id=divfilter></div>
+<main id=main></main>
+
+→ <a href=main.html>元素ゲームのホーム</a><br>
+
+<script type="module">
+const fn = "./compound/standard.json";
+const data = await (await fetch(fn)).json();
+console.log(data);
+
+const cr = (tag, parent) => {
+  const c = document.createElement(tag);
+  if (parent) parent.appendChild(c);
+  return c;
+};
+
+const tostr = (components) => {
+  const s = [];
+  for (const name in components) {
+    s.push(name + " x " + components[name]);
+  }
+  return s.join(", ");
+};
+
+const tbl = cr("table", main);
+const thead = cr("thead", tbl);
+const tr = cr("tr", thead);
+const names = ["name", "formula", "point", "components"];
+for (const name of names) {
+  cr("th", tr).textContent = name;
+}
+const tbody = cr("tbody", tbl);
+for (const d of data.material) {
+  const tr = cr("tr", tbody);
+  tr.data = d;
+  for (const name of names) {
+    const v = d[name];
+    cr("td", tr).textContent = typeof v == "object" ? tostr(v) : v;
+  }
+}
+
+const comps = [];
+for (const d of data.material) {
+  for (const c in d.components) {
+    if (comps.indexOf(c) == -1) {
+      comps.push(c);
+    }
+  }
+}
+const crLabel = (s, parent) => {
+  const lbl = cr("label", parent);
+  const chk = cr("input", lbl);
+  //chk.checked = true;
+  chk.type = "checkbox";
+  cr("span", lbl).textContent = s;
+  return chk;
+};
+const show = () => {
+  A: for (const tr of tbody.children) {
+    for (const chk of divfilter.children) {
+      if (!chk.children[0].checked) continue;
+      const c = chk.children[1].textContent;
+      if (!tr.data.components[c]) {
+        tr.style.display = "none";
+        continue A;
+      }
+    }
+    tr.style.display = "";
+  }
+};
+for (const c of comps) {
+  const chk = crLabel(c, divfilter);
+  chk.oninput = () => show();
+}
+
+</script>
+
+<style>
+body {
+  font-family: sans-serif;
+}
+#divfilter {
+  font-size: 120%;
+  background-color: #eee;
+  padding: .5em;
+  margin: 1em;
+}
+#divfilter > label {
+  margin-right: .2em;
+}
+label {
+  white-space: nowrap;
+}
+table {
+  border-collapse: collapse;
+  margin: 0.5em 1.2em;
+}
+td, th {
+  text-align: left;
+  border: 1px solid black;
+  padding: .1em .5em;
+}
+</style>
+
+</body>
+</html>
